@@ -1,0 +1,62 @@
+{
+  "name": "navidate",
+  "version": "1.0.0",
+  "description": "AI-powered date planning application",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "nextjs",
+    "ai",
+    "date-planning",
+    "openai",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.9.1",
+    "@hookform/resolvers": "^5.0.1",
+    "@prisma/client": "^6.8.2",
+    "@radix-ui/react-icons": "^1.3.2",
+    "@radix-ui/react-slot": "^1.2.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.511.0",
+    "next": "^14.0.0",
+    "next-auth": "^4.24.11",
+    "openai": "^5.0.2",
+    "prisma": "^6.8.2",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-google-autocomplete": "^2.7.5",
+    "react-hook-form": "^7.57.0",
+    "react-leaflet": "^4.2.1",
+    "tailwind-merge": "^3.3.0",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.25.49"
+  },
+  "devDependencies": {
+    "@types/google.maps": "^3.58.1",
+    "@types/html2canvas": "^0.5.35",
+    "@types/jspdf": "^1.3.3",
+    "@types/leaflet": "^1.9.18",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "autoprefixer": "^10.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.0.0",
+    "postcss": "^8.0.0",
+    "tailwindcss": "^3.0.0",
+    "typescript": "^5.0.0"
+  }
+}

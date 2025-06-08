@@ -1,0 +1,261 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // User preferences
+  preferences UserPreferences?
+
+  // User's saved and favorite dates
+  savedDates    DateItinerary[] @relation("UserSavedDates")
+  favoriteDates DateItinerary[] @relation("UserFavoriteDates")
+
+  // Authentication
+  accounts Account[]
+  sessions Session[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model UserPreferences {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Budget preferences
+  budgetMin Int @default(0)
+  budgetMax Int @default(200)
+
+  // Default duration in minutes
+  defaultDuration Int @default(180) // 3 hours
+
+  // Preferred date types
+  preferredDateTypes DateType[]
+
+  // Location preferences
+  defaultCity    String?
+  defaultState   String?
+  defaultCountry String? @default("US")
+
+  // Travel preferences
+  maxTravelDistance Int @default(25) // miles
+
+  // Dietary restrictions
+  dietaryRestrictions String[]
+
+  // Accessibility needs
+  accessibilityNeeds String[]
+
+  // Preferred times of day
+  preferredTimesOfDay TimeOfDay[]
+
+  // Default group size
+  defaultGroupSize Int @default(2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_preferences")
+}
+
+model Venue {
+  id          String      @id @default(cuid())
+  name        String
+  address     String
+  city        String
+  state       String?
+  country     String      @default("US")
+  latitude    Float
+  longitude   Float
+  category    VenueCategory
+  priceLevel  Int         @default(2) // 1-4 scale
+  rating      Float       @default(0)
+  reviewCount Int         @default(0)
+  photos      String[]
+  description String?
+  website     String?
+  phone       String?
+
+  // Google Places data
+  googlePlaceId String? @unique
+  googleData    Json?
+
+  // Opening hours (JSON format)
+  openingHours Json?
+
+  // Estimated costs and duration
+  estimatedCostMin Int?
+  estimatedCostMax Int?
+  estimatedDuration Int? // minutes
+
+  // Activities that use this venue
+  activities DateActivity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("venues")
+}
+
+model DateItinerary {
+  id          String @id @default(cuid())
+  title       String
+  description String
+
+  // Cost and duration
+  totalCostMin    Int
+  totalCostMax    Int
+  totalDuration   Int // minutes
+
+  // User preferences used to generate this itinerary
+  budgetMin           Int
+  budgetMax           Int
+  duration            Int
+  dateType            DateType
+  city                String
+  state               String?
+  country             String      @default("US")
+  maxTravelDistance   Int
+  dietaryRestrictions String[]
+  accessibilityNeeds  String[]
+  timeOfDay           TimeOfDay
+  groupSize           Int
+
+  // Location coordinates
+  centerLatitude  Float?
+  centerLongitude Float?
+
+  // Activities in this itinerary
+  activities DateActivity[]
+
+  // User relationships
+  createdBy   User?   @relation("UserSavedDates", fields: [createdById], references: [id])
+  createdById String?
+
+  favoritedBy User[] @relation("UserFavoriteDates")
+
+  // Metadata
+  tags      String[]
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("date_itineraries")
+}
+
+model DateActivity {
+  id          String @id @default(cuid())
+  itineraryId String
+  itinerary   DateItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+
+  venueId String
+  venue   Venue  @relation(fields: [venueId], references: [id])
+
+  // Activity details
+  title       String
+  description String
+  startTime   DateTime
+  endTime     DateTime
+
+  // Cost and travel
+  estimatedCost     Int
+  travelTimeToNext  Int? // minutes to next activity
+  travelDistanceToNext Float? // miles to next activity
+
+  // Order in the itinerary
+  order Int
+
+  // Notes
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("date_activities")
+}
+
+// Enums
+enum DateType {
+  ROMANTIC
+  CASUAL
+  ADVENTUROUS
+  CULTURAL
+  ACTIVE
+  RELAXED
+
+  @@map("date_type")
+}
+
+enum VenueCategory {
+  RESTAURANT
+  BAR
+  ACTIVITY
+  ENTERTAINMENT
+  OUTDOOR
+  CULTURAL
+
+  @@map("venue_category")
+}
+
+enum TimeOfDay {
+  MORNING
+  AFTERNOON
+  EVENING
+  NIGHT
+
+  @@map("time_of_day")
+} 
