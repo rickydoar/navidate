@@ -79,14 +79,8 @@ export interface DateItinerary {
 
 export interface User {
   id: string
-  email: string
   name?: string
-  image?: string
   preferences?: Partial<DatePreferences>
-  savedDates: string[] // DateItinerary IDs
-  favoriteDates: string[] // DateItinerary IDs
-  createdAt: string
-  updatedAt: string
 }
 
 export interface AIRecommendationRequest {
