@@ -63,8 +63,7 @@ export default function PlanPage() {
     message, 
     error: streamingError, 
     data: streamingData,
-    startStream,
-    reset: resetStream
+    startStream
   } = useStreamingAPI()
 
   const handleSubmit = async () => {

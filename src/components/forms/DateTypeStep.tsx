@@ -172,9 +172,9 @@ export default function DateTypeStep({ dateType, groupSize, onUpdate }: DateType
         </h4>
         <ul className="text-sm text-purple-800 dark:text-purple-200 space-y-1">
           <li>• Choose based on your relationship stage and comfort level</li>
-          <li>• Consider your partner's interests and preferences</li>
+          <li>• Consider your partner&apos;s interests and preferences</li>
           <li>• Group size affects venue options and activity types</li>
-          <li>• We'll suggest activities that match your chosen vibe</li>
+          <li>• We&apos;ll suggest activities that match your chosen vibe</li>
         </ul>
       </div>
 

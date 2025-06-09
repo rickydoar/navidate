@@ -84,6 +84,7 @@ export default function InteractiveMap({
   const createCustomIcon = (index: number, isActive: boolean) => {
     if (typeof window === 'undefined') return null
     
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const L = require('leaflet')
     return L.divIcon({
       html: `<div class="w-8 h-8 ${isActive ? 'bg-blue-600' : 'bg-gray-600'} text-white rounded-full flex items-center justify-center font-bold text-sm shadow-lg border-2 border-white">${index + 1}</div>`,

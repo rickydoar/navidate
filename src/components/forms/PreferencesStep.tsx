@@ -223,8 +223,8 @@ export default function PreferencesStep({
         </h4>
         <ul className="text-sm text-indigo-800 dark:text-indigo-200 space-y-1">
           <li>• These preferences help us filter venue recommendations</li>
-          <li>• You can always skip this step if you don't have specific needs</li>
-          <li>• We'll prioritize venues that accommodate your requirements</li>
+          <li>• You can always skip this step if you don&apos;t have specific needs</li>
+          <li>• We&apos;ll prioritize venues that accommodate your requirements</li>
           <li>• More specific preferences lead to better-tailored suggestions</li>
         </ul>
       </div>
@@ -232,9 +232,9 @@ export default function PreferencesStep({
       {/* Skip Option */}
       <div className="text-center">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Don't have any specific preferences? That's perfectly fine! 
+          Don&apos;t have any specific preferences? That&apos;s perfectly fine! 
           <br />
-          We'll suggest great options for everyone.
+          We&apos;ll suggest great options for everyone.
         </p>
       </div>
     </div>

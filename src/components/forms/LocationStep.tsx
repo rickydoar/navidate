@@ -74,7 +74,7 @@ export default function LocationStep({ location, maxTravelDistance, onUpdate }: 
 
       // Extract city, state, country from place components
       if (place.address_components) {
-        place.address_components.forEach((component: any) => {
+        place.address_components.forEach((component: google.maps.GeocoderAddressComponent) => {
           const types = component.types
           if (types.includes('locality') || types.includes('administrative_area_level_2')) {
             newLocation.city = component.long_name
@@ -326,7 +326,7 @@ export default function LocationStep({ location, maxTravelDistance, onUpdate }: 
           <li>• Use exact address for the most accurate venue recommendations</li>
           <li>• Address autocomplete helps find real places and coordinates</li>
           <li>• Consider traffic and travel time in your distance choice</li>
-          <li>• We'll suggest venues within your specified radius</li>
+          <li>• We&apos;ll suggest venues within your specified radius</li>
           <li>• Popular areas often have more dining and activity options</li>
         </ul>
       </div>

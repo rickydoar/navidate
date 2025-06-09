@@ -86,10 +86,10 @@ export async function POST(request: NextRequest) {
           })}\n\n`))
 
           // Parse and validate the response
-          let parsedResponse: any
+          let parsedResponse: { alternatives?: unknown[]; reasoning?: string }
           try {
             parsedResponse = JSON.parse(accumulatedContent)
-          } catch (parseError) {
+          } catch {
             console.error('Failed to parse AI response:', accumulatedContent)
             controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
               type: 'error',
@@ -186,6 +186,7 @@ function createAlternativesPrompt(
 
 **Date Context:**
 - Date Type: ${dateType}
+- Time of Day: ${timeOfDay}
 - Group Size: ${groupSize} people
 - Location: ${formatLocation()}
 - Max Travel Distance: ${maxTravelDistance} miles

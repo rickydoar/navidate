@@ -210,7 +210,7 @@ export default function DurationStep({ duration, timeOfDay, selectedDate, onUpda
           <li>• Consider travel time between activities</li>
           <li>• Shorter dates are great for first meetings</li>
           <li>• Longer dates allow for multiple activities</li>
-          <li>• We'll optimize your itinerary for the time available</li>
+          <li>• We&apos;ll optimize your itinerary for the time available</li>
         </ul>
       </div>
 

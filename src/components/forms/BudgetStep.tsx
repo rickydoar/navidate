@@ -120,7 +120,7 @@ export default function BudgetStep({ budget, onUpdate }: BudgetStepProps) {
         <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
           <li>• Include costs for activities, food, drinks, and transportation</li>
           <li>• Consider tips and unexpected expenses</li>
-          <li>• We'll suggest options within your range</li>
+          <li>• We&apos;ll suggest options within your range</li>
         </ul>
       </div>
 

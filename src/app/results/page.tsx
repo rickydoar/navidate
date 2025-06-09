@@ -68,7 +68,7 @@ export default function ResultsPage() {
             No Date Plan Found
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mb-8">
-            It looks like you haven't generated a date plan yet.
+            It looks like you haven&apos;t generated a date plan yet.
           </p>
           <Link href="/plan">
             <Button className="px-8">Plan Your Date</Button>

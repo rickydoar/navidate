@@ -223,11 +223,11 @@ export default function ReviewStep({ preferences, onEdit }: ReviewStepProps) {
             </div>
             <div className="flex items-start">
               <span className="font-bold mr-2">2.</span>
-              <span>We'll create a detailed itinerary with timing, activities, and estimated costs</span>
+              <span>We&apos;ll create a detailed itinerary with timing, activities, and estimated costs</span>
             </div>
             <div className="flex items-start">
               <span className="font-bold mr-2">3.</span>
-              <span>You'll get multiple options to choose from, with backup suggestions</span>
+              <span>You&apos;ll get multiple options to choose from, with backup suggestions</span>
             </div>
             <div className="flex items-start">
               <span className="font-bold mr-2">4.</span>
@@ -246,7 +246,7 @@ export default function ReviewStep({ preferences, onEdit }: ReviewStepProps) {
             <ul className="space-y-1">
               <li>• Make sure your location is accurate for the best recommendations</li>
               <li>• Double-check your budget range includes all expected expenses</li>
-              <li>• Consider any special occasions or themes you'd like to include</li>
+              <li>• Consider any special occasions or themes you&apos;d like to include</li>
             </ul>
           </div>
         </div>

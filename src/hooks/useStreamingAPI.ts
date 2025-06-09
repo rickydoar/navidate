@@ -5,7 +5,7 @@ interface StreamingProgress {
   message: string
   progress: number
   partial_content?: string
-  data?: any
+  data?: unknown
 }
 
 interface UseStreamingAPIReturn {
@@ -13,8 +13,8 @@ interface UseStreamingAPIReturn {
   progress: number
   message: string
   error: string | null
-  data: any
-  startStream: (url: string, body: any) => Promise<void>
+  data: unknown
+  startStream: (url: string, body: unknown) => Promise<void>
   reset: () => void
 }
 
@@ -23,7 +23,7 @@ export function useStreamingAPI(): UseStreamingAPIReturn {
   const [progress, setProgress] = useState(0)
   const [message, setMessage] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [data, setData] = useState<any>(null)
+  const [data, setData] = useState<unknown>(null)
 
   const reset = useCallback(() => {
     setIsLoading(false)
@@ -33,7 +33,7 @@ export function useStreamingAPI(): UseStreamingAPIReturn {
     setData(null)
   }, [])
 
-  const startStream = useCallback(async (url: string, body: any) => {
+  const startStream = useCallback(async (url: string, body: unknown) => {
     reset()
     setIsLoading(true)
     setMessage('Initializing...')

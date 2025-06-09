@@ -7,15 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import InteractiveMap from '@/components/ui/InteractiveMap'
 import { AIRecommendationResponse, DateActivity } from '@/types'
-import { Clock, MapPin, DollarSign, Star, Users, ArrowLeft, RefreshCw, Check, X, Loader2 } from 'lucide-react'
+import { Clock, MapPin, Star, Users, ArrowLeft, RefreshCw, Check, X } from 'lucide-react'
 import { useStreamingAPI } from '@/hooks/useStreamingAPI'
 import { StreamingProgress } from '@/components/ui/StreamingProgress'
 
-interface AlternativeActivity extends DateActivity {
-  isAlternative?: boolean
-}
-
-interface AlternativesResponse {
+interface AlternativesAPIResponse {
   alternatives: DateActivity[]
   reasoning: string
   promptRating?: {
@@ -25,6 +21,8 @@ interface AlternativesResponse {
   }
 }
 
+
+
 export default function EditDatePlanPage() {
   const [datePlan, setDatePlan] = useState<AIRecommendationResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -32,7 +30,7 @@ export default function EditDatePlanPage() {
   const [alternatives, setAlternatives] = useState<DateActivity[]>([])
   const [isLoadingAlternatives, setIsLoadingAlternatives] = useState(false)
   const [alternativesReasoning, setAlternativesReasoning] = useState('')
-  const [promptRating, setPromptRating] = useState<{score: number, reasons: string[], suggestions: string[]} | null>(null)
+  const [, setPromptRating] = useState<{score: number, reasons: string[], suggestions: string[]} | null>(null)
 
   // Streaming hook for alternatives
   const { 
@@ -62,8 +60,9 @@ export default function EditDatePlanPage() {
   // Handle streaming completion for alternatives
   useEffect(() => {
     if (streamingData && !streamingLoading && !streamingError) {
-      setAlternatives(streamingData.alternatives || [])
-      setAlternativesReasoning(streamingData.reasoning || '')
+      const data = streamingData as AlternativesAPIResponse
+      setAlternatives(data.alternatives || [])
+      setAlternativesReasoning(data.reasoning || '')
       setIsLoadingAlternatives(false)
     }
   }, [streamingData, streamingLoading, streamingError])

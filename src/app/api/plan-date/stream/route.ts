@@ -76,10 +76,20 @@ export async function POST(request: NextRequest) {
           })}\n\n`))
 
           // Parse and validate the response
-          let parsedResponse: any
+          let parsedResponse: { 
+            title?: string; 
+            description?: string; 
+            activities?: unknown[]; 
+            totalCost?: { min: number; max: number }; 
+            totalDuration?: number; 
+            alternatives?: unknown[]; 
+            reasoning?: string; 
+            confidence?: number; 
+            tags?: string[] 
+          }
           try {
             parsedResponse = JSON.parse(accumulatedContent)
-          } catch (parseError) {
+          } catch {
             console.error('Failed to parse AI response:', accumulatedContent)
             controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
               type: 'error',

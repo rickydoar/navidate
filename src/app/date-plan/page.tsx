@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import InteractiveMap from '@/components/ui/InteractiveMap'
@@ -133,13 +133,11 @@ export default function DatePlanPage() {
        const canvas = await html2canvas(contentElement as HTMLElement, {
          useCORS: true,
          allowTaint: true,
-         backgroundColor: '#ffffff',
+         background: '#ffffff',
          logging: false,
          height: contentElement.scrollHeight,
          width: contentElement.scrollWidth,
-         scrollX: 0,
-         scrollY: 0,
-       } as any)
+       } as Parameters<typeof html2canvas>[1])
       
       // Restore hidden elements
       if (header && originalHeaderDisplay !== undefined) {
@@ -209,6 +207,7 @@ export default function DatePlanPage() {
       }
       
       // Add footer with page numbers
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const totalPages = (pdf as any).getNumberOfPages()
       for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i)
@@ -265,7 +264,7 @@ export default function DatePlanPage() {
               No Date Plan Found
             </h1>
             <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg">
-              It looks like you haven't generated a date plan yet. Let's create something amazing!
+              It looks like you haven&apos;t generated a date plan yet. Let&apos;s create something amazing!
             </p>
             <Link href="/plan">
               <Button size="lg" className="px-8 py-3 text-lg">
