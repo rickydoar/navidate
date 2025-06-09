@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import InteractiveMap from '@/components/ui/InteractiveMap'
 import { AIRecommendationResponse, DateActivity } from '@/types'
-import { Clock, MapPin, Star, Users, ArrowLeft, RefreshCw, Check, X } from 'lucide-react'
+import { Clock, MapPin, Star, Users, ArrowLeft, RefreshCw, Check, X, Edit3 } from 'lucide-react'
 import { useStreamingAPI } from '@/hooks/useStreamingAPI'
 import { StreamingProgress } from '@/components/ui/StreamingProgress'
 
@@ -20,8 +20,6 @@ interface AlternativesAPIResponse {
     suggestions: string[]
   }
 }
-
-
 
 export default function EditDatePlanPage() {
   const [datePlan, setDatePlan] = useState<AIRecommendationResponse | null>(null)
@@ -109,8 +107,10 @@ export default function EditDatePlanPage() {
     return colors[dateType as keyof typeof colors] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300'
   }
 
-  const handleActivityClick = async (activityIndex: number) => {
-    if (!datePlan) return
+  const handleGenerateAlternatives = async (activityIndex: number, event: React.MouseEvent) => {
+    event.stopPropagation() // Prevent card click
+    
+    if (!datePlan || isLoadingAlternatives || streamingLoading) return
 
     setEditingActivityIndex(activityIndex)
     setAlternatives([])
@@ -213,13 +213,19 @@ export default function EditDatePlanPage() {
 
   const { itinerary } = datePlan
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
       <header className="px-4 lg:px-6 h-16 flex items-center border-b bg-white/80 backdrop-blur-sm dark:bg-gray-900/80 sticky top-0 z-50">
         <Link className="flex items-center justify-center" href="/">
           <span className="text-2xl font-bold text-primary">Navidate</span>
         </Link>
+        <div className="ml-4 flex items-center gap-2">
+          <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300">
+            <Edit3 className="w-3 h-3 mr-1" />
+            Edit Mode
+          </Badge>
+        </div>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
           <Link href="/date-plan">
             <Button variant="ghost" size="sm">
@@ -244,11 +250,12 @@ export default function EditDatePlanPage() {
           </div>
           
           <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+            <Edit3 className="inline-block w-12 h-12 mr-4 text-orange-500" />
             Edit Your Date Plan
           </h1>
           
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Click on any activity to see alternative options that fit your preferences
+            Click the "Find Alternatives" button on any activity to see other options that fit your preferences
           </p>
         </div>
 
@@ -260,19 +267,18 @@ export default function EditDatePlanPage() {
             {itinerary.activities.map((activity: DateActivity, index: number) => (
               <Card 
                 key={activity.id} 
-                className={`shadow-xl border-0 bg-white/90 backdrop-blur-sm dark:bg-gray-800/90 transition-all duration-300 cursor-pointer ${
+                className={`shadow-xl border-2 transition-all duration-300 ${
                   editingActivityIndex === index 
-                    ? 'ring-2 ring-orange-500 scale-[1.02]' 
-                    : 'hover:scale-[1.01] hover:ring-2 hover:ring-primary/50'
-                }`}
-                onClick={() => handleActivityClick(index)}
+                    ? 'border-orange-500 bg-orange-50/90 dark:bg-orange-900/20 scale-[1.02]' 
+                    : 'border-orange-300 bg-orange-50/50 dark:bg-orange-900/10 hover:scale-[1.01] hover:border-orange-400'
+                } backdrop-blur-sm`}
               >
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4">
                       <div className="flex-shrink-0">
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${
-                          editingActivityIndex === index ? 'bg-orange-500' : 'bg-primary'
+                          editingActivityIndex === index ? 'bg-orange-600' : 'bg-orange-500'
                         }`}>
                           {editingActivityIndex === index ? (
                             <RefreshCw className="w-6 h-6" />
@@ -285,7 +291,7 @@ export default function EditDatePlanPage() {
                         <CardTitle className="text-xl text-gray-900 dark:text-white mb-2">
                           {activity.venue.name}
                         </CardTitle>
-                        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                           <div className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
                             {formatTime(activity.startTime)} - {formatTime(activity.endTime)}
@@ -307,13 +313,33 @@ export default function EditDatePlanPage() {
                     </div>
                   </div>
                   
-                  {editingActivityIndex === index && (
-                    <div className="mt-4 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                  {/* Edit Mode Indicator */}
+                  <div className="mt-4 p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <div className="flex items-center justify-between">
                       <p className="text-sm text-orange-800 dark:text-orange-200 font-medium">
-                        🔄 Click to see alternative options for this activity
+                        <Edit3 className="inline w-4 h-4 mr-1" />
+                        Ready to customize this activity
                       </p>
+                      <Button 
+                        size="sm"
+                        className="bg-orange-500 hover:bg-orange-600 text-white"
+                        onClick={(e) => handleGenerateAlternatives(index, e)}
+                        disabled={isLoadingAlternatives || streamingLoading}
+                      >
+                        {(isLoadingAlternatives || streamingLoading) && editingActivityIndex === index ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            Finding...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="w-4 h-4 mr-2" />
+                            Find Alternatives
+                          </>
+                        )}
+                      </Button>
                     </div>
-                  )}
+                  </div>
                 </CardHeader>
                 
                 <CardContent>
@@ -433,14 +459,14 @@ export default function EditDatePlanPage() {
                           >
                             <Check className="w-4 h-4 mr-2" />
                             Choose This Option
-                                                     </Button>
-                         </div>
-                       ))}
-                     </div>
-                   ) : editingActivityIndex !== null && !isLoadingAlternatives && !streamingLoading && (
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : editingActivityIndex !== null && !isLoadingAlternatives && !streamingLoading && (
                     <div className="text-center py-8">
                       <p className="text-gray-600 dark:text-gray-300">
-                        Click on an activity to see alternatives
+                        Click "Find Alternatives" to see other options
                       </p>
                     </div>
                   )}
