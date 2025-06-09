@@ -121,31 +121,6 @@ export default function LocationStep({ location, maxTravelDistance, onUpdate }: 
     { value: 50, label: '50 miles', description: 'Willing to travel' },
   ]
 
-  const handleUseCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords
-          const newLocation = {
-            ...localLocation,
-            coordinates: { lat: latitude, lng: longitude }
-          }
-          setLocalLocation(newLocation)
-          onUpdate(newLocation, localMaxTravelDistance)
-          
-          // TODO: Reverse geocode to get city name
-          // For now, just update coordinates
-        },
-        (error) => {
-          console.error('Error getting location:', error)
-          alert('Unable to get your current location. Please enter it manually.')
-        }
-      )
-    } else {
-      alert('Geolocation is not supported by this browser.')
-    }
-  }
-
   return (
     <div className="space-y-8">
       {/* Location Input */}
@@ -200,14 +175,6 @@ export default function LocationStep({ location, maxTravelDistance, onUpdate }: 
             <span className="px-4 text-sm text-gray-500 dark:text-gray-400">OR</span>
             <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
           </div>
-
-          {/* Current Location Button */}
-          <button
-            onClick={handleUseCurrentLocation}
-            className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors text-gray-600 dark:text-gray-400 dark:border-gray-600"
-          >
-            📍 Use My Current Location
-          </button>
 
           {/* Manual Location Input */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
