@@ -204,6 +204,11 @@ function createDatePlanningPrompt(preferences: DatePreferences): string {
 
 Please create a detailed date plan that includes 2-4 activities/venues that fit within the budget and time constraints. Consider travel time between locations and ensure they're all within the specified travel distance.
 
+IMPORTANT PLANNING REQUIREMENTS
+- Do not make up venues or activities that don't exist. If you cannot find a venue or activity that fits the user's preferences, find something close to the user's preferences.
+- If the user has provided an exact address, use this as the central reference point for all recommendations. Find venues within ${maxTravelDistance} miles of this specific address. Include precise travel times and distances from this address to each venue.
+- Do not guess the address of an activity. Use web search tools to find the address of the activity if you are unsure.
+
 ${location.address ? 
 `IMPORTANT: The user has provided an exact address (${location.address}). Use this as the central reference point for all recommendations. Find venues within ${maxTravelDistance} miles of this specific address. Include precise travel times and distances from this address to each venue.` : 
 `The user has provided a general location (${location.city}${location.state ? `, ${location.state}` : ''}). Find popular venues in this area within ${maxTravelDistance} miles of the city center.`}

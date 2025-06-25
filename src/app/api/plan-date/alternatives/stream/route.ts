@@ -210,6 +210,11 @@ ${nextActivity ? `- Next Activity: ${nextActivity.venue.name} (${nextActivity.ve
 6. All venues must be within ${maxTravelDistance} miles of ${formatLocation()}
 7. If you can't find 3 good alternatives in the same category, you may include 1-2 alternatives from complementary categories that would work well in this time slot
 
+IMPORTANT PLANNING REQUIREMENTS
+- Do not make up venues or activities that don't exist. If you cannot find a venue or activity that fits the user's preferences, find something close to the user's preferences.
+- If the user has provided an exact address, use this as the central reference point for all recommendations. Find venues within ${maxTravelDistance} miles of this specific address. Include precise travel times and distances from this address to each venue.
+- Do not guess the address of an activity. Use web search tools to find the address of the activity if you are unsure.
+
 Respond with a JSON object in this exact format:
 {
   "alternatives": [
