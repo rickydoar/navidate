@@ -1,10 +1,7 @@
 import { NextRequest } from 'next/server'
-import OpenAI from 'openai'
-import { DatePreferences } from '@/types'
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+import { DatePreferences, Venue } from '@/types'
+import { DatePlannerService } from '@/lib/date-planner'
+import { googlePlaces } from '@/lib/google-places'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,108 +11,124 @@ export async function POST(request: NextRequest) {
       return new Response('Date preferences are required', { status: 400 })
     }
 
-    // Create a detailed prompt for OpenAI
-    const prompt = createDatePlanningPrompt(preferences)
+    // Validate API keys
+    if (!process.env.OPENAI_API_KEY || !process.env.GOOGLE_PLACES_API_KEY) {
+      return new Response('API keys not configured', { status: 500 })
+    }
+
+    // Create service instance
+    const planner = new DatePlannerService(process.env.OPENAI_API_KEY)
 
     // Create a readable stream
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const completion = await openai.chat.completions.create({
-            model: "gpt-4",
-            messages: [
-              {
-                role: "system",
-                content: "You are an expert date planner who creates personalized, and memorable date experiences. You have extensive knowledge of venues, activities, and timing to create perfect date itineraries. Always respond with valid JSON that matches the expected schema."
-              },
-              {
-                role: "user",
-                content: prompt
-              }
-            ],
-            temperature: 0.7,
-            max_tokens: 2000,
-            stream: true,
-          })
-
-          let accumulatedContent = ''
-          
           // Send initial progress update
           controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
             type: 'progress',
-            message: 'Starting to generate your perfect date...',
+            message: 'Starting to plan your perfect date...',
             progress: 0
           })}\n\n`))
 
-          let tokenCount = 0
-          const estimatedTotalTokens = 1500 // Rough estimate for progress calculation
-
-          for await (const chunk of completion) {
-            const content = chunk.choices[0]?.delta?.content || ''
-            if (content) {
-              accumulatedContent += content
-              tokenCount += content.split(' ').length // Rough token estimation
-              
-              const progress = Math.min(90, (tokenCount / estimatedTotalTokens) * 100)
-              
-              // Send progress update
-              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
-                type: 'progress',
-                message: 'Generating your date plan...',
-                progress: Math.round(progress),
-                partial_content: content
-              })}\n\n`))
-            }
-          }
-
-          // Send processing update
+          // Step 1: Generate creative date structure with GPT-4
           controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
             type: 'progress',
-            message: 'Processing and validating your date plan...',
-            progress: 95
+            message: 'Creating a personalized date concept...',
+            progress: 20
           })}\n\n`))
 
-          // Parse and validate the response
-          let parsedResponse: { 
-            title?: string; 
-            description?: string; 
-            activities?: unknown[]; 
-            totalCost?: { min: number; max: number }; 
-            totalDuration?: number; 
-            alternatives?: unknown[]; 
-            reasoning?: string; 
-            confidence?: number; 
-            tags?: string[] 
-          }
-          try {
-            parsedResponse = JSON.parse(accumulatedContent)
-          } catch {
-            console.error('Failed to parse AI response:', accumulatedContent)
+          const dateStructure = await planner.generateDateStructure(preferences)
+
+          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
+            type: 'progress',
+            message: `Planning: ${dateStructure.theme}`,
+            progress: 40,
+            partial_data: {
+              theme: dateStructure.theme,
+              description: dateStructure.description
+            }
+          })}\n\n`))
+
+          // Step 2: Find real venues matching the structure
+          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
+            type: 'progress',
+            message: 'Finding perfect venues near you...',
+            progress: 60
+          })}\n\n`))
+
+          const activities = await planner.findVenuesForStructure(dateStructure, preferences)
+
+          if (activities.length === 0) {
             controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
               type: 'error',
-              message: 'Failed to parse AI response. Please try again.'
+              message: 'No suitable venues found in your area. Try adjusting your preferences.'
             })}\n\n`))
             controller.close()
             return
           }
 
-          // Transform the AI response into our expected format
+          // Step 3: Enhance with creative descriptions
+          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
+            type: 'progress',
+            message: 'Adding the finishing touches...',
+            progress: 80
+          })}\n\n`))
+
+          let enhancedActivities = activities
+          try {
+            enhancedActivities = await planner.enhanceActivitiesWithDescriptions(
+              activities,
+              dateStructure
+            )
+          } catch (error) {
+            console.error('Failed to enhance descriptions, using basic activities:', error)
+            // Continue with basic activities if enhancement fails
+          }
+
+          // Step 4: Find alternative venues
+          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
+            type: 'progress',
+            message: 'Finding backup options...',
+            progress: 90
+          })}\n\n`))
+
+          let alternatives: Venue[] = []
+          try {
+            alternatives = await findAlternativeVenues(preferences, enhancedActivities)
+          } catch (error) {
+            console.error('Failed to find alternatives:', error)
+            // Continue without alternatives
+          }
+
+          // Calculate total cost and duration
+          const totalCost = {
+            min: enhancedActivities.reduce((sum, a) => sum + (a.estimatedCost * 0.8), 0),
+            max: enhancedActivities.reduce((sum, a) => sum + (a.estimatedCost * 1.2), 0)
+          }
+
+          const totalDuration = enhancedActivities.reduce((sum, a) => {
+            const start = parseTime(a.startTime)
+            const end = parseTime(a.endTime)
+            return sum + (end - start) + (a.travelTimeToNext || 0)
+          }, 0)
+
+          // Prepare final response
           const itinerary = {
-            title: parsedResponse.title || 'Your Perfect Date',
-            description: parsedResponse.description || 'A personalized date experience',
-            activities: parsedResponse.activities || [],
-            totalCost: parsedResponse.totalCost || { min: 0, max: 0 },
-            totalDuration: parsedResponse.totalDuration || 0,
+            title: dateStructure.theme,
+            description: dateStructure.description,
+            activities: enhancedActivities,
+            totalCost,
+            totalDuration,
             preferences,
             isFavorite: false,
-            tags: parsedResponse.tags || []
+            tags: generateTags(dateStructure, preferences)
           }
 
           const response = {
             itinerary,
-            alternatives: parsedResponse.alternatives || [],
-            reasoning: parsedResponse.reasoning || '',
-            confidence: parsedResponse.confidence || 0.8
+            alternatives,
+            reasoning: `I've created a ${preferences.dateType} date experience that flows naturally from ${dateStructure.flow.map(f => f.phase.toLowerCase()).join(' to ')}. Each venue has been verified to exist and is within ${preferences.maxTravelDistance} miles of your location.`,
+            confidence: 0.95 // Higher confidence due to real venue data
           }
 
           // Send final result
@@ -132,7 +145,7 @@ export async function POST(request: NextRequest) {
           console.error('Error in streaming date planning:', error)
           controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
             type: 'error',
-            message: 'Failed to generate date plan. Please try again.'
+            message: error instanceof Error ? error.message : 'Failed to generate date plan. Please try again.'
           })}\n\n`))
           controller.close()
         }
@@ -153,124 +166,63 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function createDatePlanningPrompt(preferences: DatePreferences): string {
-  const {
-    budget,
-    duration,
-    dateType,
-    location,
-    maxTravelDistance,
-    dietaryRestrictions = [],
-    accessibilityNeeds = [],
-    timeOfDay,
-    groupSize,
-    selectedDate
-  } = preferences
+async function findAlternativeVenues(
+  preferences: DatePreferences,
+  plannedActivities: { venue: { id: string; coordinates: { lat: number; lng: number } } }[]
+): Promise<Venue[]> {
+  const location = preferences.location.coordinates || 
+    (plannedActivities[0]?.venue.coordinates)
 
-  // Generate appropriate start times based on time of day
-  const getTimeRange = (timeOfDay: string) => {
-    switch (timeOfDay) {
-      case 'morning': return { start: '09:00', end: '12:00' }
-      case 'afternoon': return { start: '13:00', end: '17:00' }
-      case 'evening': return { start: '18:00', end: '21:00' }
-      case 'night': return { start: '21:00', end: '23:30' }
-      default: return { start: '18:00', end: '21:00' }
+  if (!location) return []
+
+  // Get venue IDs we're already using
+  const usedVenueIds = new Set(plannedActivities.map(a => a.venue.id))
+
+  // Search for alternatives of different types
+  const searchTypes = ['restaurant', 'bar', 'activity', 'cultural']
+  const alternatives: Venue[] = []
+
+  for (const type of searchTypes) {
+    try {
+      const venues = await googlePlaces.searchVenuesForDate(
+        location,
+        type,
+        preferences.budget,
+        preferences.maxTravelDistance
+      )
+
+      // Add venues we haven't already selected
+      const newVenues = venues.filter(v => !usedVenueIds.has(v.id))
+      alternatives.push(...newVenues.slice(0, 2)) // Take top 2 of each type
+    } catch (error) {
+      console.error(`Error finding alternatives for ${type}:`, error)
     }
   }
 
-  const timeRange = getTimeRange(timeOfDay)
-  const dateForPrompt = selectedDate || new Date().toISOString().split('T')[0]
-
-  // Format location - prioritize exact address if available
-  const formatLocation = () => {
-    if (location.address) {
-      return `${location.address}${location.coordinates ? ` (${location.coordinates.lat}, ${location.coordinates.lng})` : ''}`
-    }
-    return `${location.city}${location.state ? `, ${location.state}` : ''}${location.country ? `, ${location.country}` : ''}`
-  }
-
-  return `Create a detailed date itinerary based on these preferences:
-
-**Date**: ${dateForPrompt}
-**Budget**: $${budget.min} - $${budget.max}
-**Duration**: ${Math.floor(duration / 60)} hours ${duration % 60} minutes
-**Date Type**: ${dateType}
-**Location**: ${formatLocation()}
-**Max Travel Distance**: ${maxTravelDistance} miles
-**Time of Day**: ${timeOfDay} (suggested start time between ${timeRange.start} and ${timeRange.end})
-**Group Size**: ${groupSize} people
-**Dietary Restrictions**: ${dietaryRestrictions.length > 0 ? dietaryRestrictions.join(', ') : 'None'}
-**Accessibility Needs**: ${accessibilityNeeds.length > 0 ? accessibilityNeeds.join(', ') : 'None'}
-
-Please create a detailed date plan that includes 2-4 activities/venues that fit within the budget and time constraints. Consider travel time between locations and ensure they're all within the specified travel distance.
-
-IMPORTANT PLANNING REQUIREMENTS
-- Do not make up venues or activities that don't exist. If you cannot find a venue or activity that fits the user's preferences, find something close to the user's preferences.
-- If the user has provided an exact address, use this as the central reference point for all recommendations. Find venues within ${maxTravelDistance} miles of this specific address. Include precise travel times and distances from this address to each venue.
-- Do not guess the address of an activity. Use web search tools to find the address of the activity if you are unsure.
-
-${location.address ? 
-`IMPORTANT: The user has provided an exact address (${location.address}). Use this as the central reference point for all recommendations. Find venues within ${maxTravelDistance} miles of this specific address. Include precise travel times and distances from this address to each venue.` : 
-`The user has provided a general location (${location.city}${location.state ? `, ${location.state}` : ''}). Find popular venues in this area within ${maxTravelDistance} miles of the city center.`}
-
-Respond with a JSON object in this exact format:
-{
-  "title": "Creative title for the date",
-  "description": "Brief description of the overall experience",
-  "activities": [
-    {
-      "id": "unique-id-1",
-      "venue": {
-        "id": "venue-id-1",
-        "name": "Venue Name",
-        "address": "Full address",
-        "coordinates": { "lat": 0.0, "lng": 0.0 },
-        "category": "restaurant|bar|activity|entertainment|outdoor|cultural",
-        "priceLevel": 1-4,
-        "rating": 4.5,
-        "reviewCount": 100,
-        "description": "Brief venue description",
-        "estimatedDuration": 90,
-        "estimatedCost": { "min": 30, "max": 50 }
-      },
-      "startTime": "18:00",
-      "endTime": "19:30",
-      "description": "What you'll do here",
-      "estimatedCost": 40,
-      "travelTimeToNext": 15,
-      "notes": "Any special notes"
-    }
-  ],
-  "totalCost": { "min": 80, "max": 150 },
-  "totalDuration": ${duration},
-  "reasoning": "Brief explanation of why this itinerary works well",
-  "confidence": 0.9,
-  "tags": ["romantic", "foodie", "outdoor"],
-  "alternatives": [
-    {
-      "id": "alt-venue-1",
-      "name": "Alternative Venue",
-      "address": "Address",
-      "coordinates": { "lat": 0.0, "lng": 0.0 },
-      "category": "restaurant",
-      "priceLevel": 2,
-      "rating": 4.2,
-      "reviewCount": 85,
-      "description": "Alternative option description"
-    }
-  ]
+  return alternatives.slice(0, 6) // Return max 6 alternatives
 }
 
-IMPORTANT FORMATTING REQUIREMENTS:
-- Use the date ${dateForPrompt} for planning
-- Return times in HH:MM format (24-hour) WITHOUT timezone or date information
-- Start the first activity between ${timeRange.start} and ${timeRange.end} based on the ${timeOfDay} preference
-${location.address ? 
-`- Use ${location.address} as the central reference point for all venue recommendations and travel calculations
-- All venues must be within ${maxTravelDistance} miles of ${location.address}
-- Calculate realistic travel times from ${location.address} to each venue` :
-`- Make sure all venues are realistic and appropriate for ${location.city}`}
-- Include specific addresses and realistic coordinates for all venues
-- Ensure the total cost stays within the $${budget.min}-$${budget.max} budget range
-- Schedule activities logically with appropriate time gaps for travel and transitions`
+function parseTime(timeStr: string): number {
+  const [hours, minutes] = timeStr.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
+function generateTags(structure: { flow: Array<{ activityType: string; vibe: string }> }, preferences: DatePreferences): string[] {
+  const tags: string[] = [preferences.dateType]
+  
+  // Add tags based on structure
+  if (structure.flow.some((f) => f.activityType.includes('restaurant'))) {
+    tags.push('foodie')
+  }
+  if (structure.flow.some((f) => f.activityType.includes('outdoor'))) {
+    tags.push('outdoor')
+  }
+  if (structure.flow.some((f) => f.vibe.includes('romantic'))) {
+    tags.push('romantic')
+  }
+  if (preferences.timeOfDay === 'night') {
+    tags.push('nightlife')
+  }
+  
+  return Array.from(new Set(tags)) // Remove duplicates
 } 

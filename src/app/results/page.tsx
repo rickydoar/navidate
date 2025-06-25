@@ -25,11 +25,28 @@ export default function ResultsPage() {
   }, [])
 
   const formatTime = (timeString: string) => {
-    return new Date(timeString).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    })
+    // Handle HH:MM format from date-planner service
+    if (timeString.includes(':') && timeString.length === 5) {
+      const [hours, minutes] = timeString.split(':').map(Number)
+      const date = new Date()
+      date.setHours(hours, minutes, 0, 0)
+      return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      })
+    }
+    
+    // Fallback for ISO strings
+    try {
+      return new Date(timeString).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      })
+    } catch {
+      return timeString // Return as-is if parsing fails
+    }
   }
 
   const formatCurrency = (amount: number) => {
