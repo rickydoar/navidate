@@ -255,7 +255,7 @@ export default function EditDatePlanPage() {
           </h1>
           
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Click the "Find Alternatives" button on any activity to see other options that fit your preferences
+            Click the &ldquo;Find Alternatives&rdquo; button on any activity to see other options that fit your preferences
           </p>
         </div>
 
@@ -466,7 +466,7 @@ export default function EditDatePlanPage() {
                   ) : editingActivityIndex !== null && !isLoadingAlternatives && !streamingLoading && (
                     <div className="text-center py-8">
                       <p className="text-gray-600 dark:text-gray-300">
-                        Click "Find Alternatives" to see other options
+                        Click &ldquo;Find Alternatives&rdquo; to see other options
                       </p>
                     </div>
                   )}
