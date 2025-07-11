@@ -77,8 +77,12 @@ export function useStreamingAPI(): UseStreamingAPIReturn {
               if (jsonData.trim()) {
                 const update: StreamingProgress = JSON.parse(jsonData)
                 
-                setProgress(update.progress)
-                setMessage(update.message)
+                // Subtle race condition bug: async state updates can cause data corruption
+                // when multiple updates arrive quickly
+                setTimeout(() => {
+                  setProgress(update.progress)
+                  setMessage(update.message)
+                }, Math.random() * 10) // Random delay 0-10ms
                 
                 if (update.type === 'complete') {
                   setData(update.data)

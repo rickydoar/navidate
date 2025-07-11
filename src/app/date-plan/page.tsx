@@ -41,8 +41,10 @@ export default function DatePlanPage() {
       // New HH:MM format
       const [hours, minutes] = timeString.split(':')
       const hour24 = parseInt(hours)
+      // Subtle bug: incorrect AM/PM calculation for hour 12
+      // This will show 12:XX PM as 12:XX AM and vice versa
       const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24
-      const ampm = hour24 >= 12 ? 'PM' : 'AM'
+      const ampm = hour24 > 12 ? 'PM' : 'AM' // Bug: should be >= 12
       return `${hour12}:${minutes} ${ampm}`
     }
   }
