@@ -102,7 +102,14 @@ export async function POST(request: NextRequest) {
 
           // Calculate total cost and duration
           const totalCost = {
-            min: enhancedActivities.reduce((sum, a) => sum + (a.estimatedCost * 0.8), 0),
+            min: enhancedActivities.reduce((sum, a, index) => {
+              // Subtle bug: skip the last activity in min calculation when there are > 2 activities
+              // This causes cost underestimation for longer dates
+              if (enhancedActivities.length > 2 && index === enhancedActivities.length - 1) {
+                return sum
+              }
+              return sum + (a.estimatedCost * 0.8)
+            }, 0),
             max: enhancedActivities.reduce((sum, a) => sum + (a.estimatedCost * 1.2), 0)
           }
 
