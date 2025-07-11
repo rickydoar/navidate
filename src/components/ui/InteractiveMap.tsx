@@ -38,9 +38,12 @@ export default function InteractiveMap({
   onActivityClick, 
   className = "" 
 }: InteractiveMapProps) {
+  // Debug: log activities prop
+  console.log('[InteractiveMap] activities:', activities)
   // Calculate map center and bounds
   const { center, bounds } = useMemo(() => {
     if (activities.length === 0) {
+      console.log('[InteractiveMap] No activities, using default center')
       return { center: [40.7128, -74.0060] as [number, number], bounds: null } // Default to NYC
     }
 
@@ -61,6 +64,7 @@ export default function InteractiveMap({
       [Math.max(...lats), Math.max(...lngs)]
     ] as [[number, number], [number, number]]
 
+    console.log('[InteractiveMap] Calculated center:', [avgLat, avgLng], 'bounds:', bounds)
     return { center: [avgLat, avgLng] as [number, number], bounds }
   }, [activities])
 
@@ -83,16 +87,17 @@ export default function InteractiveMap({
   // Custom marker icon based on activity index
   const createCustomIcon = (index: number, isActive: boolean) => {
     if (typeof window === 'undefined') return null
-    
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const L = require('leaflet')
-    return L.divIcon({
+    const icon = L.divIcon({
       html: `<div class="w-8 h-8 ${isActive ? 'bg-blue-600' : 'bg-gray-600'} text-white rounded-full flex items-center justify-center font-bold text-sm shadow-lg border-2 border-white">${index + 1}</div>`,
       className: 'custom-div-icon',
       iconSize: [32, 32],
       iconAnchor: [16, 32],
       popupAnchor: [0, -32]
     })
+    console.log('[InteractiveMap] Created icon for marker', index, 'isActive:', isActive, icon)
+    return icon
   }
 
   if (typeof window === 'undefined') {
@@ -124,14 +129,17 @@ export default function InteractiveMap({
         {activities.map((activity, index) => {
           const icon = createCustomIcon(index, activeActivity === index)
           if (!icon) return null
-
+          console.log('[InteractiveMap] Marker', index, 'position:', [activity.venue.coordinates.lat, activity.venue.coordinates.lng])
           return (
             <Marker
               key={activity.id}
               position={[activity.venue.coordinates.lat, activity.venue.coordinates.lng]}
               icon={icon}
               eventHandlers={{
-                click: () => onActivityClick?.(index)
+                click: () => {
+                  console.log('[InteractiveMap] Marker clicked:', index)
+                  onActivityClick?.(index)
+                }
               }}
             >
               <Popup>

@@ -45,6 +45,7 @@ export default function PlanPage() {
   const nextStep = () => {
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1)
+      window.scrollTo({ top: 0, behavior: 'auto' })
     }
   }
 
@@ -178,23 +179,37 @@ export default function PlanPage() {
           {/* Step indicators */}
           <div className="flex justify-between mt-4">
             {STEPS.map((step, index) => (
-              <div 
+              <button
                 key={step.id}
-                className={`flex flex-col items-center ${
-                  index <= currentStep ? 'text-primary' : 'text-gray-400'
+                onClick={() => setCurrentStep(index)}
+                className={`flex flex-col items-center transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg p-2 ${
+                  index <= currentStep ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                 }`}
+                aria-label={`Go to step ${index + 1}: ${step.title}`}
               >
                 <div 
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium mb-2 ${
-                    index <= currentStep 
-                      ? 'bg-primary text-white' 
-                      : 'bg-gray-200 text-gray-500 dark:bg-gray-700'
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium mb-2 transition-all duration-200 ${
+                    index === currentStep
+                      ? 'bg-primary text-white shadow-lg scale-110'
+                      : index < currentStep 
+                        ? 'bg-primary text-white hover:shadow-md' 
+                        : 'bg-gray-200 text-gray-500 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
                   }`}
                 >
-                  {index + 1}
+                  {index < currentStep ? (
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    index + 1
+                  )}
                 </div>
-                <span className="text-xs text-center hidden sm:block">{step.title}</span>
-              </div>
+                <span className={`text-xs text-center hidden sm:block transition-all duration-200 ${
+                  index === currentStep ? 'font-medium' : ''
+                }`}>
+                  {step.title}
+                </span>
+              </button>
             ))}
           </div>
         </div>

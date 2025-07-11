@@ -251,14 +251,14 @@ export class DatePlannerService {
       Return ONLY a valid JSON array of strings, one description for each activity. Example format:
       ["Description for activity 1", "Description for activity 2", "Description for activity 3"]
       
-      Make each description romantic, engaging, and specific to the venue while maintaining the date's theme.`
+      Make each description engaging, and specific to the venue while maintaining the date's theme.`
 
       const completion = await this.openai.chat.completions.create({
         model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: "You create engaging, romantic descriptions for date activities. You MUST respond with valid JSON only - no additional text, explanations, or formatting. Just a JSON array of strings."
+            content: "You create engaging descriptions for date activities. You MUST respond with valid JSON only - no additional text, explanations, or formatting. Just a JSON array of strings."
           },
           {
             role: "user",
@@ -488,6 +488,7 @@ Generate a real, specific activity that someone could actually do in this locati
 - Exact activity description
 - Estimated cost (if any)
 - Why it fits the date vibe
+- Keep it short and concise with one activity
 
 IMPORTANT: For the "location" field, provide a proper address format like:
 - "Golden Gate Park, San Francisco, CA" 
@@ -499,7 +500,7 @@ Respond with JSON in this format:
 {
   "name": "Specific activity name",
   "location": "Proper address format - Real Place Name, City, State",
-  "description": "Detailed activity description",
+  "description": "Detailed activity description about this one activity",
   "estimatedCost": 25,
   "category": "outdoor|activity|cultural|entertainment"
 }`
@@ -580,4 +581,4 @@ Respond with JSON in this format:
 
     return fallbackMap[activityType] || ['restaurant', 'bar', 'activity']
   }
-} 
+}
